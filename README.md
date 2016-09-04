@@ -3,9 +3,16 @@
 A web application that provides users with article suggestions based on their browsing history.
 
 
+
 ### Setup
 
-pip install requirements.txt
+#### Install dependencies
+
+`pip install requirements.txt`
+
+#### Set MySQL Database Uri environment variable
+
+`$ export DATABASE_URI="mysql://myuser:mypass@localhost:3306/mydb?charset=utf8"`
 
 
 ### Run
