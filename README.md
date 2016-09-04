@@ -10,5 +10,5 @@ pip install requirements.txt
 
 ### Run
 
-uwsgi --socket <host>:<port> --protocol=http --master -w run
+uwsgi --socket <host>:<port> --protocol=http --master -w news
 
