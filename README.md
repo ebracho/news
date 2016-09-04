@@ -10,12 +10,13 @@ A web application that provides users with article suggestions based on their br
 
 `pip install requirements.txt`
 
-#### Set MySQL Database Uri environment variable
+#### Set MySQL Database URI environment variable
 
 `$ export DATABASE_URI="mysql://myuser:mypass@localhost:3306/mydb?charset=utf8"`
 
 
 ### Run
 
-uwsgi --socket <host>:<port> --protocol=http --master -w news
+From the root directory of the project:
+`uwsgi --socket <host>:<port> --protocol=http --master -w news`
 
