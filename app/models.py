@@ -1,13 +1,19 @@
 from collections import Counter
+from datetime import datetime
 from app import db
 
 
 class Domain(db.Model):
     __tablename__ = 'domain'
     url = db.Column(db.Unicode(256), primary_key=True)
+    brand = db.Column(db.Unicode(128))
+    description = db.Column(db.Unicode(2048))
+    
 
-    def __init__(self, url):
+    def __init__(self, url, brand, description):
         self.url = url
+        self.brand = brand
+        self.description = description
 
     def __repr__(self):
         return '<Domain {}>'.format(self.url)
@@ -27,7 +33,7 @@ class Article(db.Model):
         self.url = url
         self.domain_url = domain_url
         self.title = title
-        self.publish_date = publish_date
+        self.publish_date = publish_date or datetime.now()
         self.text = text if len(text) < 200 else text[:200]
         self.image_url = image_url
         self.word_count = Counter(text.split())
