@@ -18,14 +18,16 @@ class Article(db.Model):
     url = db.Column(db.Unicode(2048), primary_key=True)
     domain_url = db.Column(db.Unicode(256), db.ForeignKey('domain.url'))
     title = db.Column(db.Unicode(256))
+    publish_date = db.Column(db.DateTime)
     text = db.Column(db.Unicode(200)) # First 200 characters of article text
     image_url = db.Column(db.Unicode(2048))
     word_count = db.Column(db.PickleType)
     
-    def __init__(self, url, domain_url, title, text, image_url):
+    def __init__(self, url, domain_url, title, publish_date, text, image_url):
         self.url = url
         self.domain_url = domain_url
         self.title = title
+        self.publish_date = publish_date
         self.text = text if len(text) < 200 else text[:200]
         self.image_url = image_url
         self.word_count = Counter(text.split())
