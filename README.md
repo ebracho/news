@@ -8,7 +8,7 @@ A web application that provides users with article suggestions based on their br
 
 #### Install dependencies
 
-`pip install requirements.txt`
+`$ pip install requirements.txt`
 
 #### Set MySQL Database URI environment variable
 
@@ -18,5 +18,6 @@ A web application that provides users with article suggestions based on their br
 ### Run
 
 From the root directory of the project:
-`uwsgi --socket <host>:<port> --protocol=http --master -w news`
+
+`$ uwsgi --socket <host>:<port> --protocol=http --master -w news`
 
