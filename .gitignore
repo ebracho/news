@@ -25,3 +25,8 @@ build
 
 #Other
 envvars
+server.bash
+worker.bash
+beat.bash
+celerybeat-schedule
+celerybeat.pid
