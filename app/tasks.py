@@ -1,7 +1,8 @@
+import os
+import logging
 from datetime import datetime, timedelta, timezone
 import newspaper
 from newspaper import news_pool
-from celery.utils.log import get_task_logger
 from app import db, celery
 from app.models import Domain, Article
 
@@ -10,20 +11,30 @@ from app.models import Domain, Article
 PST = timezone(-timedelta(hours=8))
 
 # Task logger
-logger = get_task_logger(__name__)
+logfile = os.environ.get('CELERY_LOGFILE', './celery.log')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+ch = logging.FileHandler(logfile)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 @celery.task(ignore_results=True)
 def scrape_articles():
     """Retrieves and stores new articles from each domain in the database.
     """
-    print('this is a test')
-
     # Open log file
-    logger.info(datetime.now(PST).strftime('SCHEDULED SCRAPE %c\n'))
+    logger.info('Beginning Schedule Scrape')
 
     # Build papers
-    papers = [newspaper.build(d.url, memoize_articles=False) for d in db.session.query(Domain).all()]
+    try:
+        papers = [newspaper.build(d.url, memoize_articles=False) for d in db.session.query(Domain).all()]
+    except Exception as e:
+        logger.error('Error loading papers. Aborting')
+        logger.error(e)
+        return
 
     # Filter out seen articles to save bandwidth/cpu
     seen_articles = {a.url for a in db.session.query(Article).all()}
@@ -31,8 +42,13 @@ def scrape_articles():
         paper.articles = list(filter(lambda a: a.url not in seen_articles, paper.articles))
 
     # Download new articles from each domain concurrently
-    news_pool.set(papers)
-    news_pool.join()
+    try:
+        news_pool.set(papers)
+        news_pool.join()
+    except Exception as e:
+        logger.error('Error downloading papers. Aborting') 
+        logger.error(e)
+        return
     
     # Parse and store new articles
     written_articles = 0
@@ -46,11 +62,10 @@ def scrape_articles():
                 entry = Article(a.url, domain_url, a.title, a.publish_date, a.text, a.top_image)
                 db.session.add(entry)
                 db.session.commit()
+                logger.info('Article written: {}'.format(a.url))
             except Exception as e:
-                logger.error('@@@@@@@@@@@@@@ SCRAPE_ARTICLES ERROR @@@@@@@@@@@@@@')
-                logger.error('Error Downloading Article {}'.format(a.url))
+                logger.error('Error parsing article {}'.format(a.url))
                 logger.error(e)
-                logger.error('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
             else:
                 written_articles += 1
 
@@ -73,6 +88,6 @@ CELERYBEAT_SCHEDULE = {
 #
 celery.conf.update(
     CELERYBEAT_SCHEDULE=CELERYBEAT_SCHEDULE,
-    CELERYD_HIJACK_ROOT_LOGGER=True,
+    CELERY_ACCEPT_CONTENT=['json'],
 )
 
