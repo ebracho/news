@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import newspaper
 from newspaper import news_pool
+from celery.utils.log import get_task_logger
 from app import db, celery
 from app.models import Domain, Article
 
@@ -8,35 +9,35 @@ from app.models import Domain, Article
 # PST timezone for datetime functions
 PST = timezone(-timedelta(hours=8))
 
+# Task logger
+logger = get_task_logger(__name__)
+
 
 @celery.task(ignore_results=True)
 def scrape_articles():
     """Retrieves and stores new articles from each domain in the database.
     """
+    print('this is a test')
+
     # Open log file
-    logfile = open('news.tasks.log', 'a')
-    logfile.write(datetime.now(PST).strftime('SCHEDULED SCRAPE %c\n'))
+    logger.info(datetime.now(PST).strftime('SCHEDULED SCRAPE %c\n'))
 
     # Build papers
-    logfile.write('Building papers...\n')
-    papers = [newspaper.build(d.url) for d in db.session.query(Domain).all()]
+    papers = [newspaper.build(d.url, memoize_articles=False) for d in db.session.query(Domain).all()]
 
     # Filter out seen articles to save bandwidth/cpu
-    logfile.write('Filtering seen articles...\n')
     seen_articles = {a.url for a in db.session.query(Article).all()}
     for paper in papers:
         paper.articles = list(filter(lambda a: a.url not in seen_articles, paper.articles))
 
     # Download new articles from each domain concurrently
-    n_articles = sum(map(lambda p: len(p.articles), papers))
-    logfile.write('Downloading {} articles...\n'.format(n_articles))
     news_pool.set(papers)
     news_pool.join()
     
     # Parse and store new articles
+    written_articles = 0
     for paper in papers:
         domain_url = paper.url
-        logfile.write('Parsing articles from {}\n'.format(domain_url))
         for a in paper.articles:
             try:
                 a.parse()
@@ -46,19 +47,19 @@ def scrape_articles():
                 db.session.add(entry)
                 db.session.commit()
             except Exception as e:
-                logfile.write('===============ERROR===============')
-                logfile.write(e)
-                logfile.write('===================================')
+                logger.error('@@@@@@@@@@@@@@ SCRAPE_ARTICLES ERROR @@@@@@@@@@@@@@')
+                logger.error('Error Downloading Article {}'.format(a.url))
+                logger.error(e)
+                logger.error('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
             else:
-                logfile.write('Article written: {}\n'.format(a.url))
+                written_articles += 1
 
-    # Close log file
-    logfile.write('\n')
-    logfile.close()
+    logger.info('{} new articles written\n'.format(written_articles))
                 
-            
-# Register scrape_articles as periodic task
 
+#
+# Register scrape_articles as periodic task
+#
 CELERYBEAT_SCHEDULE = {
     'hourly_article_scrape': {
         'task': 'news.scrape_articles',
@@ -66,7 +67,12 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
+
+#
+# Celery Settings
+#
 celery.conf.update(
     CELERYBEAT_SCHEDULE=CELERYBEAT_SCHEDULE,
+    CELERYD_HIJACK_ROOT_LOGGER=True,
 )
 
