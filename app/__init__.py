@@ -5,6 +5,10 @@ from celery import Celery
 
 # Flask configuration
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+
+# Google Signin configuration
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
 
 # SQLAlchemy configuration 
 default_db_uri = 'sqlite:////tmp/news_test.db'

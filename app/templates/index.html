@@ -1,0 +1,30 @@
+<html>
+
+<head>
+  <meta name="google-signin-client_id" content="{{ config['GOOGLE_CLIENT_ID'] }}">
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  <title>MyNews</title>
+</head>
+
+<body>
+  <p>Hello</p>
+  <div class="g-signin2" data-onsuccess="onGoogleSignIn"></div>
+</body>
+
+<!-- JQuery -->
+<script
+  src="https://code.jquery.com/jquery-3.1.0.min.js"
+  integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+  crossorigin="anonymous"></script>
+
+<!-- Google Signin -->
+<script type="text/javascript">
+  function onGoogleSignIn(googleUser) {
+    $.post({
+      url: '{{ url_for('google_signin') }}',
+      data: {'idtoken': googleUser.getAuthResponse().id_token}
+    });
+  }
+</script>
+
+</html>

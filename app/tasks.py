@@ -1,14 +1,11 @@
 import os
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 import newspaper
 from newspaper import news_pool
 from app import db, celery
 from app.models import Domain, Article
 
-
-# PST timezone for datetime functions
-PST = timezone(-timedelta(hours=8))
 
 # Task logger
 logfile = os.environ.get('CELERY_LOGFILE', './celery.log')
@@ -72,12 +69,16 @@ def scrape_articles():
     logger.info('{} new articles written\n'.format(written_articles))
                 
 
+@celery.task
+def add(x, y):
+    return x + y
+
 #
 # Register scrape_articles as periodic task
 #
 CELERYBEAT_SCHEDULE = {
     'hourly_article_scrape': {
-        'task': 'news.scrape_articles',
+        'task': 'app.tasks.scrape_articles',
         'schedule': timedelta(hours=1),
     },
 }
@@ -88,6 +89,5 @@ CELERYBEAT_SCHEDULE = {
 #
 celery.conf.update(
     CELERYBEAT_SCHEDULE=CELERYBEAT_SCHEDULE,
-    CELERY_ACCEPT_CONTENT=['json'],
 )
 
