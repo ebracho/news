@@ -58,3 +58,15 @@ class User(db.Model):
         self.join_date = join_date or datetime.utcnow()
     
     
+class AricleView(db.Model):
+    __tablename__ = 'ArticleView'
+    article_url = db.Column(db.Unicode(512), db.ForeignKey('article.url'), primary_key=True)
+    user_sub = db.Column(db.String(256), db.ForeignKey('user.sub'), primary_key=True)
+    clicked = db.Column(db.Boolean)
+
+    def __init__(self, article_url, user_sub, clicked):
+        self.article_url = article_url
+        self.user_sub = user_sub
+        self.clicked = clicked
+
+    
