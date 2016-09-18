@@ -75,13 +75,7 @@ def scrape_articles():
     logger.info('{} new articles written\n'.format(written_articles))
                 
 
-@celery.task
-def add(x, y):
-    return x + y
-
-#
 # Register scrape_articles as periodic task
-#
 CELERYBEAT_SCHEDULE = {
     'hourly_article_scrape': {
         'task': 'app.tasks.scrape_articles',
@@ -90,9 +84,7 @@ CELERYBEAT_SCHEDULE = {
 }
 
 
-#
 # Celery Settings
-#
 celery.conf.update(
     CELERYBEAT_SCHEDULE=CELERYBEAT_SCHEDULE,
 )

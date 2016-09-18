@@ -1,6 +1,7 @@
 from flask import request, session, render_template
 from oauth2client import client, crypt
-from app import app
+from app import app, db
+from app.models import User
 
 
 @app.route('/', methods=['GET'])
@@ -15,9 +16,11 @@ def google_signin():
     token = request.form['idtoken']
     try:
         idinfo = client.verify_id_token(token, app.config['GOOGLE_CLIENT_ID'])
-        print(idinfo)
     except crypt.AppIdentityError:
         abort(401)
+    if db.session.query(User).filter(User.sub == idinfo['sub']).first() == None:
+        db.session.add(User(idinfo['sub']))
+        db.session.commit()
     session['userid'] = idinfo['sub']
     return ''
         

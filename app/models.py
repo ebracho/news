@@ -48,3 +48,13 @@ class Article(db.Model):
         return '<Article {}>'.format(self.title)
         
 
+class User(db.Model):
+    __tablename__ = 'user'
+    sub = db.Column(db.String(256), primary_key=True)
+    join_date = db.Column(db.DateTime)
+
+    def __init__(self, sub, join_date=None):
+        self.sub = sub
+        self.join_date = join_date or datetime.utcnow()
+    
+    
