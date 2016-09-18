@@ -1,0 +1,6 @@
+2016-09-18 22:57:27,184 - INFO - Beginning Schedule Scrape
+2016-09-18 22:57:27,201 - ERROR - Error loading papers. Aborting
+2016-09-18 22:57:27,201 - ERROR - (sqlite3.OperationalError) no such table: domain [SQL: 'SELECT domain.url AS domain_url, domain.brand AS domain_brand, domain.description AS domain_description \nFROM domain']
+2016-09-18 22:59:21,476 - INFO - Beginning Schedule Scrape
+2016-09-18 22:59:21,488 - ERROR - Error loading papers. Aborting
+2016-09-18 22:59:21,488 - ERROR - (sqlite3.OperationalError) no such table: domain [SQL: 'SELECT domain.url AS domain_url, domain.brand AS domain_brand, domain.description AS domain_description \nFROM domain']

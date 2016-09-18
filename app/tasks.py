@@ -1,5 +1,6 @@
 import os
 import logging
+import tldextract
 from datetime import timedelta
 import newspaper
 from newspaper import news_pool
@@ -37,6 +38,11 @@ def scrape_articles():
     seen_articles = {a.url for a in db.session.query(Article).all()}
     for paper in papers:
         paper.articles = list(filter(lambda a: a.url not in seen_articles, paper.articles))
+
+    # Filter out articles that have different domain from paper (newspaper bug)
+    for paper in papers:
+        paper_url = tldextract.extract(paper.domain)
+        paper.articles = list(filter(lambda a: tldextract.extract(a.url).domain == paper_url.domain, paper.articles))
 
     # Download new articles from each domain concurrently
     try:
