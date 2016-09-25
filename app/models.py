@@ -58,7 +58,7 @@ class User(db.Model):
         self.join_date = join_date or datetime.utcnow()
     
     
-class AricleView(db.Model):
+class ArticleView(db.Model):
     __tablename__ = 'ArticleView'
     article_url = db.Column(db.Unicode(512), db.ForeignKey('article.url'), primary_key=True)
     user_sub = db.Column(db.String(256), db.ForeignKey('user.sub'), primary_key=True)
@@ -68,5 +68,6 @@ class AricleView(db.Model):
         self.article_url = article_url
         self.user_sub = user_sub
         self.clicked = clicked
+
 
     
