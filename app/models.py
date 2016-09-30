@@ -6,6 +6,7 @@ Datetime columns use UTC
 
 from collections import Counter
 from datetime import datetime
+import json
 from app import db
 
 
@@ -52,11 +53,30 @@ class User(db.Model):
     __tablename__ = 'user'
     sub = db.Column(db.String(256), primary_key=True)
     join_date = db.Column(db.DateTime)
+    reading_queue = db.Column(db.Unicode(65535))
+    
 
     def __init__(self, sub, join_date=None):
         self.sub = sub
         self.join_date = join_date or datetime.utcnow()
-    
+        self.reading_queue = json.dumps([])
+
+    def get_reading_queue(self):
+        return json.loads(self.reading_queue)
+
+    def set_reading_queue(self, reading_queue):
+        self.reading_queue = json.dumps(reading_queue)
+
+    def append_reading_queue(self, article_url, article_title):
+        rq = self.get_reading_queue()
+        rq.append((article_url, article_title))
+        self.set_reading_queue(rq)
+
+    def remove_reading_queue(self, article_url):
+        rq = self.get_reading_queue()
+        rq = list(filter(lambda x: x[0] != article_url, rq))
+        self.set_reading_queue(rq)
+
     
 class ArticleView(db.Model):
     __tablename__ = 'ArticleView'
@@ -68,6 +88,4 @@ class ArticleView(db.Model):
         self.article_url = article_url
         self.user_sub = user_sub
         self.clicked = clicked
-
-
-    
+ 
