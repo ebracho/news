@@ -1,7 +1,11 @@
 import random
 from functools import wraps
-from flask import request, session, render_template, jsonify, abort
-from oauth2client import client, crypt
+import binascii
+import requests
+import os
+from urllib.parse import urlencode, parse_qs
+from flask import request, session, render_template, jsonify, abort, url_for, redirect
+#from oauth2client import client, crypt
 from app import app, db
 from app.models import User, Article, ArticleView
 
@@ -10,22 +14,57 @@ def requires_login(view):
     @wraps(view)
     def decorator(*args, **kwargs):
         if not 'usersub' in session:
-            abort(401)
-        user = db.session.query(User).filter(User.sub == session['usersub']).first()
-        if not user:
-            db.session.add(User(session['usersub']))
-            db.session.commit()
+            return redirect(url_for('login'))
         return view(*args, **kwargs)
     return decorator
     
 
+def handle_github_login(session_code):
+    data = {
+        'client_id': app.config['GITHUB_CLIENT_ID'],
+        'client_secret': app.config['GITHUB_CLIENT_SECRET'],
+        'code': session_code,
+        'state': session.get('state', '')
+    }
+    result = requests.post(
+        'https://github.com/login/oauth/access_token', data=data)
+    qs = parse_qs(result.text)
+    access_token = qs['access_token']
+    result = requests.get(
+            'https://api.github.com/user', 
+            params={'access_token': access_token})
+    session['usersub'] = result.json()['login']
+
+    # Create user if it doesn't exist
+    user = db.session.query(User).filter(User.sub == session['usersub']).first()
+    if not user:
+        db.session.add(User(session['usersub']))
+        db.session.commit()
+
+
 @app.route('/', methods=['GET'])
 def home():
+    if 'code' in request.args:
+        handle_github_login(request.args['code'])
     return render_template('index.html')
 
 
+@app.route('/login', methods=['GET'])
+def login():
+    state = binascii.hexlify(os.urandom(32)).decode('utf-8')
+    session['state'] = state
+    query = {
+        'client_id': app.config['GITHUB_CLIENT_ID'],
+        'state': state
+    }
+    return redirect(
+        'https://github.com/login/oauth/authorize/?' + urlencode(query))
+
+
+"""
 @app.route('/google-signin', methods=['POST'])
 def google_signin():
+    print('google signin called')
     if 'idtoken' not in request.form:
         abort(400)
     token = request.form['idtoken']
@@ -38,6 +77,7 @@ def google_signin():
         db.session.commit()
     session['usersub'] = idinfo['sub']
     return ''
+"""
         
     
 @app.route('/get-article', methods=['POST'])

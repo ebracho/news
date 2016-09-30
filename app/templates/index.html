@@ -30,9 +30,11 @@
 </head>
 
 <body>
-  <div class="g-signin2" data-onsuccess="onGoogleSignIn"></div>
-  <br/>
-  <div id="news-box-wrapper"></div>
+  {% if 'usersub' in session %}
+    <div id="news-box-wrapper"></div>
+  {% else %}
+    <a href="{{ url_for('login') }}">Signin with GitHub</a>
+  {% endif %}
 </body>
 
 
@@ -193,6 +195,7 @@
     }
   });
 
+  {% if 'usersub' in session %}
   ReactDOM.render(
     <NewsBox getArticleEndpoint="/get-article" 
       viewArticleEndpoint="/view-article"
@@ -201,19 +204,7 @@
       pollInterval="5000" />,
     document.getElementById("news-box-wrapper")
   );
-
-</script>
-
-
-<!-- google signin -->
-<script type="text/babel">
-
-  function onGoogleSignIn(googleUser) {
-    $.post({
-      url: '{{ url_for('google_signin') }}',
-      data: {'idtoken': googleUser.getAuthResponse().id_token}
-    });
-  }
+  {% endif %}
 
 </script>
 
