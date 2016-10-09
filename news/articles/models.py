@@ -26,12 +26,15 @@ class ArticleView(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     clicked = models.BooleanField()
+    read = models.BooleanField()
+    timestamp = models.DateTimeField(default=timezone.now)
 
     class Meta:
         unique_together = ('article', 'user')
 
-    def __init__(self, article, user, clicked):
+    def __init__(self, article, user, clicked, read=False):
         self.article = article
         self.user = user
         self.clicked = clicked
+        self.read = read
 
