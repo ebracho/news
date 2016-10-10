@@ -6,6 +6,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+DOMAINS = [
+    'http://pcmag.com',
+    'https://www.yahoo.com/news',
+]
+
 class Article(models.Model):
     """Stores information about a web article"""
 
@@ -13,7 +18,7 @@ class Article(models.Model):
     title = models.TextField()
     text = models.TextField()
     image = models.CharField(max_length=256)
-    source = models.CharField(max_length=256)
+    domain = models.CharField(max_length=256)
     published = models.DateTimeField(default=timezone.now)
 
 

@@ -2,27 +2,27 @@
 # Celery tasks
 #
 
+import logging
 import newspaper
 from newspaper import news_pool
-import tldextract
-import logging
-from .models import Article
+from tldextract import extract
+from .models import Article, DOMAINS
 
 logger = logging.getLogger(__name__)
 
 def parse_source(url):
     """Return stripped url containing only domain and suffix"""
-    return '{0.domain}.{0.suffix}'.format(tldextract.extract(url))
+    return '{0.domain}.{0.suffix}'.format(extract(url))
 
-def scrape_articles(sources=[]):
-    """Crawls domains in sources and scrapes new web articles"""
+def scrape_articles(domains=DOMAINS):
+    """Crawls domains and scrapes new web articles"""
 
-    papers = [newspaper.build(s) for s in sources]
+    papers = [newspaper.build(s, memoize_articles=False) for s in domains]
     news_pool.set(papers, threads_per_source=1)
     news_pool.join()
 
-    for paper in papers:
-        paper_source = parse_source(paper.url)
+    for domain, paper in zip(domains, papers):
+        paper_source = parse_source(domain)
         for article in paper.articles:
             article_source = parse_source(article.url)
             if article_source != paper_source:
@@ -32,7 +32,7 @@ def scrape_articles(sources=[]):
                         title=article.title,
                         text=article.text, 
                         image=article.top_image,
-                        source=article_source)
+                        domain=domain)
             a.save()
 
     n_articles = sum(map(lambda p: len(p.articles), papers))
