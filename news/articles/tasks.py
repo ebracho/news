@@ -5,7 +5,10 @@
 import newspaper
 from newspaper import news_pool
 import tldextract
+import logging
 from .models import Article
+
+logger = logging.getLogger(__name__)
 
 def parse_source(url):
     """Return stripped url containing only domain and suffix"""
@@ -14,7 +17,7 @@ def parse_source(url):
 def scrape_articles(sources=[]):
     """Crawls domains in sources and scrapes new web articles"""
 
-    papers = [newspaper.build(s, memoize_articles=False) for s in sources]
+    papers = [newspaper.build(s) for s in sources]
     news_pool.set(papers, threads_per_source=1)
     news_pool.join()
 
@@ -31,4 +34,8 @@ def scrape_articles(sources=[]):
                         image=article.top_image,
                         source=article_source)
             a.save()
+
+    n_articles = sum(map(lambda p: len(p.articles), papers))
+    logmsg = '{} articles crawled'.format(n_articles)
+    logger.info(logmsg)
 
