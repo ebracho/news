@@ -2,3 +2,36 @@
 __pycache__/
 venv/
 db.sqlite3
+=======
+*.py[co]
+*.DS_*
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+
+#Mr Developer
+*.pyc
+venv/
+__pycache__/
+build
+
+#Other
+envvars.bash
+server.bash
+worker.bash
+beat.bash
+celerybeat-schedule
+celerybeat.pid

@@ -1,0 +1,212 @@
+<html>
+
+<head>
+
+  <title>MyNews</title>
+
+  <!-- google signin includes -->
+  <meta name="google-signin-client_id" content="{{ config['GOOGLE_CLIENT_ID'] }}">
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+  <!-- react includes -->
+  <script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
+  <script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
+  <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
+  <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
+  <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+
+  <!-- styles -->
+  <style>
+
+    .articleSuggestion {
+      border: 1px solid black;
+      margin: 2px;
+      padding: 5px;
+      width: 300px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  {% if 'usersub' in session %}
+    <div id="news-box-wrapper"></div>
+  {% else %}
+    <a href="{{ url_for('login') }}">Signin with GitHub</a>
+  {% endif %}
+</body>
+
+
+<!-- react components -->
+<script type="text/babel">
+
+  /* Utility functions */
+  var escapeHtml = function(str) {
+    var entityMap = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': '&quot;',
+      "'": '&#39;',
+      "/": '&#x2F;'
+    };
+    return String(str).replace(/[&<>"'\/]/g, function(s) {
+      return entityMap[s];
+    });
+  }
+
+  /*
+    - NewsBox
+      - ArticleSuggestion
+      - ReadingQueue
+  */
+
+  var NewsBox = React.createClass({
+    getInitialState: function() {
+      return {article: null, readingQueueData: []};
+    },
+    loadNextArticle: function() {
+      $.post({
+        url: this.props.getArticleEndpoint,
+        datatype: 'json',
+        cache: false,
+        success: function(data) {
+          this.setState({article: data});
+          console.log(data);
+        }.bind(this),
+        error: function(xhr, status, err) {
+          console.error(this.props.url, status, err.toString());
+        }.bind(this)
+      });
+    },
+    viewArticle: function(clicked) {
+      $.post({
+        url: this.props.viewArticleEndpoint,
+        datatype: 'json',
+        cache: false,
+        data: {
+          clicked: clicked,
+          articleUrl: this.state.article.url
+        },
+        success: function() {
+          console.log('Article viewed successfully|clicked=' + clicked);
+          this.loadReadingQueue();
+        }.bind(this),
+        error: function(xhr, status, err) {
+          console.error(this.props.url, status, err.toString());
+        }.bind(this)
+      });
+      this.loadNextArticle();
+    },
+    loadReadingQueue: function() {
+      $.ajax({
+        url: this.props.getReadingQueueEndpoint,
+        datatype: 'json',
+        cache: false,
+        success: function(data) {
+          this.setState({readingQueueData: data});
+          console.log('Reading queue loaded');
+        }.bind(this),
+        error: function(xhr, status, err) {
+          console.error(this.props.url, status, err.toString());
+        }.bind(this)
+      });
+    },
+    popReadingQueue: function(articleUrl) {
+      $.post({
+        url: this.props.popReadingQueueEndpoint,
+        datatype: 'json',
+        cache: false,
+        data: {
+          'articleUrl': articleUrl
+        },
+        success: function(data) {
+          console.log('Article popped')
+        }.bind(this),
+        error: function(xhr, status, err) {
+          console.error(this.props.url, status, err.toString());
+        }.bind(this)
+      });
+    },
+    componentDidMount: function() {
+      this.loadNextArticle();
+      this.loadReadingQueue()
+      setInterval(this.loadReadingQueue, this.props.pollInterval);
+    },
+    render: function() {
+      return (
+        <div className="newsBox">
+          <h1>My News</h1>
+          <ArticleSuggestion article={this.state.article} 
+            viewArticle={this.viewArticle} />
+          <ReadingQueue data={this.state.readingQueueData}
+            popReadingQueue={this.popReadingQueue} />
+        </div>
+      );
+    }
+  });
+
+
+  var ArticleSuggestion = React.createClass({
+    clickArticle: function() {
+      this.props.viewArticle(true);
+    },
+    skipArticle: function() {
+      this.props.viewArticle(false);
+    },
+    render: function() {
+      return this.props.article ? (
+        <div className="articleSuggestion">
+          <button onClick={this.clickArticle}>Add to queue</button>
+          <button onClick={this.skipArticle}>Skip</button>
+          <h3><a href={this.props.article.url}>{this.props.article.title}</a></h3>
+          <img width="300" src={this.props.article.imageUrl}></img>
+          <p>{this.props.article.text}...</p>
+        </div>
+      ) : <p>loading article</p>;
+    }
+  });
+
+  var ReadingQueue = React.createClass({
+    buildPopFunction: function(articleUrl) {
+      return function() {
+        this.props.popReadingQueue(articleUrl);
+      }.bind(this);
+    },
+    render: function() {
+      console.log(this.props.data)
+      var queueNodes = this.props.data.map(function(article) {
+        return (
+          <li key={article.url}>
+            <a href={article.url}>{article.title}</a>
+            <button onClick={this.buildPopFunction(article.url)}>X</button>
+          </li>
+        );
+      }.bind(this));
+      return (
+        <div className="readingQueue">
+          <h3>Reading Queue</h3>
+          <ul>
+            {queueNodes}
+          </ul>
+        </div>
+      );
+    }
+  });
+
+  {% if 'usersub' in session %}
+  ReactDOM.render(
+    <NewsBox getArticleEndpoint="/get-article" 
+      viewArticleEndpoint="/view-article"
+      getReadingQueueEndpoint="/get-reading-queue"
+      popReadingQueueEndpoint="/pop-reading-queue"
+      pollInterval="5000" />,
+    document.getElementById("news-box-wrapper")
+  );
+  {% endif %}
+
+</script>
+
+
+</html>
