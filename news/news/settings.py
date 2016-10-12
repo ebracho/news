@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'registration',
     'articles',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -145,3 +146,4 @@ LOGGING = {
 
 }
 
+LOGIN_REDIRECT_URL = '/'

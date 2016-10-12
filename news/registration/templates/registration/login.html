@@ -1,0 +1,32 @@
+{% extends "registration/base.html" %}
+
+{% block title %}
+	Login
+{% endblock %}
+
+{% block content %}
+
+<form method="post" action="{% url 'login' %}">
+	{% csrf_token %}
+	<ul>
+	{% for field, errors in form.errors.items %}
+		{% for error in errors %}
+			<li>{{ error | escape }}</li>
+		{% endfor %}
+	{% endfor %}
+	</ul>
+	<table>
+		{% for field in form %}
+		<tr>
+			<td>{{ field.label_tag }}</td>
+			<td>{{ field }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	<input type="submit" value="login" />
+	<input type="hidden" name="next" value="{{ next }}" />
+</form>
+
+{% endblock %}
+
