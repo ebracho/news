@@ -6,14 +6,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+
 DOMAINS = [
     'http://pcmag.com',
     'https://www.yahoo.com/news',
 ]
 
-class Article(models.Model):
-    """Stores information about a web article"""
 
+class Article(models.Model):
+    """Stores information about a web article
+    """
     url = models.CharField(max_length=256, primary_key=True)
     title = models.TextField()
     text = models.TextField()
@@ -23,8 +25,8 @@ class Article(models.Model):
 
 
 class ArticleView(models.Model):
-    """Stores information about a user's encounter with an Article"""
-
+    """Stores information about a user's encounter with an Article
+    """
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     clicked = models.BooleanField()
