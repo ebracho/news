@@ -30,7 +30,7 @@ class ArticleView(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     clicked = models.BooleanField()
-    read = models.BooleanField()
+    read = models.BooleanField(default=False)
     timestamp = models.DateTimeField(default=timezone.now)
 
     class Meta:

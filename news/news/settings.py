@@ -146,4 +146,18 @@ LOGGING = {
 
 }
 
+
+# Auth settings
+
 LOGIN_REDIRECT_URL = '/'
+
+
+# Redis configuration
+
+import redis 
+
+REDIS_HOST = os.environ.get('REDIS_HOST', '10.0.2.2')
+REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+REDIS_DB = os.environ.get('REDIS_DB', 0)
+REDIS_CLIENT = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+

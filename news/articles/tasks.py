@@ -2,6 +2,7 @@
 # Celery tasks
 #
 
+import itertools
 import logging
 import newspaper
 from newspaper import news_pool
@@ -53,6 +54,9 @@ def scrape_articles(domains=DOMAINS):
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
+from django.conf import settings
+
+redis_client = settings.REDIS_CLIENT
 
 # Pipeline for processing and classifying text data.
 nb_pipeline = Pipeline([
@@ -80,3 +84,18 @@ def get_unread_articles(user):
     """Return a list of Articles that have not been read by user
     """
     return Article.objects.exclude(articleview__user=user).all()
+
+def update_article_queue(user):
+    """Repopulate user's article queue with unread articles ordered by 
+    click probability.
+    """
+    clf = build_classifier(user)
+    unread = get_unread_articles(user)
+    probs = clf.predict_proba(a.text for a in unread)
+    rq_name = 'user:{.username}:articlequeue'.format(user)
+    args = dict([(a.url, p[0]) for a, p in zip(unread, probs)])
+    redis_client.zadd(rq_name, **args)
+
+    # Print top matched article
+    #print(redis_client.zrange(rq_name, -1, -1, withscores=True))
+
