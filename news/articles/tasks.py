@@ -55,6 +55,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from django.conf import settings
+from .util import get_unread_articles
 
 redis_client = settings.REDIS_CLIENT
 
@@ -80,11 +81,6 @@ def build_classifier(user):
     data, labels = build_training_set(user)
     return nb_pipeline.fit(data, labels)
 
-def get_unread_articles(user):
-    """Return a list of Articles that have not been read by user
-    """
-    return Article.objects.exclude(articleview__user=user).all()
-
 def update_article_queue(user):
     """Repopulate user's article queue with unread articles ordered by 
     click probability.
@@ -92,10 +88,10 @@ def update_article_queue(user):
     clf = build_classifier(user)
     unread = get_unread_articles(user)
     probs = clf.predict_proba(a.text for a in unread)
-    rq_name = 'user:{.username}:articlequeue'.format(user)
+    aq_name = 'user:{.username}:articlequeue'.format(user)
     args = dict([(a.url, p[0]) for a, p in zip(unread, probs)])
-    redis_client.zadd(rq_name, **args)
+    redis_client.zadd(aq_name, **args)
 
     # Print top matched article
-    #print(redis_client.zrange(rq_name, -1, -1, withscores=True))
+    # print(redis_client.zrange(aq_name, -1, -1, withscores=True))
 

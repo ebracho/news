@@ -1,5 +1,10 @@
 from .models import Article, ArticleView
-from .tasks import get_unread_articles
+
+def get_unread_articles(user):
+    """Return a list of Articles that have not been read by user
+    """
+    return Article.objects.exclude(articleview__user=user).all()
+
 
 def news_cli(user):
     """Command line interface for clicking/skipping articles
