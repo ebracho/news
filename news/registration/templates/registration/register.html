@@ -1,58 +1,26 @@
 {% extends "registration/base.html" %}
 
-{% block title %}
-	Register
-{% endblock %}
+{% block title %}Register{% endblock %}
 
 {% block content %}
 
-<form method="post" action="{% url 'register' %}">
-	{% csrf_token %}
-	<ul>
-	{% for field, errors in form.errors.items %}
-		{% for error in errors %}
-			<li>{{ error | escape }}</li>
-		{% endfor %}
-	{% endfor %}
-	</ul>
-	<table>
-		{% for field in form %}
-		<tr>
-			<td>{{ field.label_tag }}</td>
-			<td>{{ field }}</td>
-		</tr>
-		{% endfor %}
-	</table>
-	<!--
-	<table>
-		<tr>
-			<td>{{ form.username.label_tag }}</td>
-			<td>{{ form.username }}</td>
-		</tr>
-		<tr>
-			<td>{{ form.email.label_tag }}</td>
-			<td>{{ form.email}}</td>
-		</tr>
-		<tr>
-			<td>{{ form.first_name.label_tag }}</td>
-			<td>{{ form.first_name }}</td>
-		</tr>
-		<tr>
-			<td>{{ form.last_name.label_tag }}</td>
-			<td>{{ form.last_name }}</td>
-		</tr>
-		<tr>
-			<td>{{ form.password.label_tag }}</td>
-			<td>{{ form.password }}</td>
-		</tr>
-		<tr>
-			<td>{{ form.confirm.label_tag }}</td>
-			<td>{{ form.confirm}}</td>
-		</tr>
-	</table>
-	-->
-
-	<input type="submit" value="register" />
-</form>
+<div class="row">
+  <div class="medium-4 medium-centered large-4 large-centered columns">
+    <form method="post" action="{% url 'register' %}">
+      {% csrf_token %}
+      <ul>
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+          <li>{{ error | escape }}</li>
+        {% endfor %}
+      {% endfor %}
+      </ul>
+      {% for field in form %}
+      {{ field.label_tag }}{{ field }}
+      {% endfor %}
+      <input class="button" type="submit" value="register" />
+    </form>
+  </div>
+</div>
 
 {% endblock %} 
