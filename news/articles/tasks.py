@@ -67,7 +67,7 @@ nb_pipeline = Pipeline([
 ])
 
 def build_training_set(user):
-    """Build an NB classifier traning set for a given user's article views.
+    """Build NB classifier traning set for a given user's article views.
     """
     article_views = ArticleView.objects.filter(user=user).all()
     data = [av.article.text for av in article_views]
@@ -81,17 +81,14 @@ def build_classifier(user):
     data, labels = build_training_set(user)
     return nb_pipeline.fit(data, labels)
 
-def update_article_queue(user):
+
+def build_article_queue(user):
     """Repopulate user's article queue with unread articles ordered by 
     click probability.
     """
     clf = build_classifier(user)
-    unread = get_unread_articles(user)
-    probs = clf.predict_proba(a.text for a in unread)
-    aq_name = 'user:{.username}:articlequeue'.format(user)
-    args = dict([(a.url, p[0]) for a, p in zip(unread, probs)])
-    redis_client.zadd(aq_name, **args)
-
-    # Print top matched article
-    # print(redis_client.zrange(aq_name, -1, -1, withscores=True))
+    unread_articles = get_unread_articles(user)
+    probs = clf.predict_proba(a.text for a in unread_articles)
+    scores = { a.url: p[0] for a, p in zip(unread, probs) }
+    user.update_article_queue(scores)
 

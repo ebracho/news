@@ -1,28 +1,34 @@
 <!DOCTYPE html>
 
 <html>
-	<head>
-		<meta charset="utf-8"/>
-		<title>MyNews | {% block title %}{% endblock %}</title>
 
+  <head>
+	  
+    <meta charset="utf-8" />
+    <title>MyNews | {% block title %}{% endblock %}</title>
 
     <!-- JQuery -->
     <script src="http://code.jquery.com/jquery-2.2.4.js"
       integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
       crossorigin="anonymous"></script>
 
-		<!-- Foundation -->
-		<link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.css"/>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation.js"></script>
+    <!-- Foundation -->
+    <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation.js"></script>
 
-		<!-- ReactJS -->
-		<script src="https://unpkg.com/react@15.3.0/dist/react.js"></script>
-		<script src="https://unpkg.com/react-dom@15.3.0/dist/react-dom.js"></script>
-		<script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
-	</head>
-	<body>
-		{% block content %}
-		{% endblock %}
-	</body>
+    <!-- ReactJS -->
+    <script src="https://unpkg.com/react@15.3.0/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15.3.0/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+  </head>
+
+  <body>
+
+    {% block content %}
+    {% endblock %}
+
+  </body>
+
 </html>
 
