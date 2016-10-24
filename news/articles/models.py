@@ -56,7 +56,8 @@ class ArticleQueue(models.Model):
             return None
         article_url = redis_client.zrange(self.id, 0, -1)
         redis_client.zrem(self.id, article_url)
-        return article_url
+        article = Article.objects.filter(url=article_url).first()
+        return article
 
     def update(self, article_scores):
         """Populates user's article queue with url-score pairs in 
