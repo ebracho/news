@@ -1,3 +1,4 @@
+from random import shuffle
 from .models import Article, ArticleView
 
 def get_unread_articles(user):
@@ -9,7 +10,8 @@ def get_unread_articles(user):
 def news_cli(user):
     """Command line interface for clicking/skipping articles
     """
-    unread = get_unread_articles(user)
+    unread = list(get_unread_articles(user))
+    shuffle(unread)
     for article in unread:
         inp = input('{} (c/s) '.format(article.title))
         if inp == 'c':

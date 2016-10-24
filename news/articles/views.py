@@ -27,12 +27,13 @@ def article(request):
         article = aq.pop()
     else:
         article = random.choice(Article.objects.all())
-    return JsonResponse({
+    data = {
         'articleUrl': article.url,
         'title': article.title,
         'text': article.text[:500],
         'imageUrl': article.image,
         'domain': article.domain,
         'published': article.published
-    })
+    }
+    return JsonResponse(data)
 

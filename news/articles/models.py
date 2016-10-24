@@ -52,9 +52,11 @@ class ArticleQueue(models.Model):
         return redis_client.zcard(self.id)
 
     def pop(self):
+        """Removes and returns the article with the highest click score
+        """
         if self.size == 0:
             return None
-        article_url = redis_client.zrange(self.id, 0, -1)
+        article_url = redis_client.zrange(self.id, -1, -1)[0]
         redis_client.zrem(self.id, article_url)
         article = Article.objects.filter(url=article_url).first()
         return article
@@ -63,6 +65,6 @@ class ArticleQueue(models.Model):
         """Populates user's article queue with url-score pairs in 
         `article_scores` dict
         """
-        redis_client.zadd(**article_scores)
+        redis_client.zadd(self.id, **article_scores)
         
 
