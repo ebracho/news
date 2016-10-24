@@ -48,12 +48,14 @@ class ArticleQueue(models.Model):
         return 'user:{.username}:articlequeue'.format(self.user)
 
     @property
-    def size():
-        return redis_client.zcard(self.article_queue_id)
+    def size(self):
+        return redis_client.zcard(self.id)
 
-    def pop():
-        article_url = redis_client.zrange(self.article_queue_id, 0, -1)
-        redis_client.zrem(self.article_queue_id, article_url)
+    def pop(self):
+        if self.size == 0:
+            return None
+        article_url = redis_client.zrange(self.id, 0, -1)
+        redis_client.zrem(self.id, article_url)
         return article_url
 
     def update(self, article_scores):
