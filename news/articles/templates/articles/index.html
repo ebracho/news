@@ -134,6 +134,7 @@
         <div className="articleSuggestion">
           <button onClick={this.clickArticle}>Add to queue</button>
           <button onClick={this.skipArticle}>Skip</button>
+          <p>prb: {this.props.article.score.toFixed(3)}</p>
           <h3><a href={this.props.article.url}>{this.props.article.title}</a></h3>
           <img width="300" src={this.props.article.imageUrl}></img>
           <p>{this.props.article.text}...</p>

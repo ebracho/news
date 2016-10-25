@@ -26,7 +26,7 @@ def get_article(request):
     """
     aq = request.user.articlequeue
     if aq.size > 0:
-        article = aq.pop()
+        article, score = aq.pop()
     else:
         article = random.choice(Article.objects.all())
     data = {
@@ -35,7 +35,8 @@ def get_article(request):
         'text': article.text[:500],
         'imageUrl': article.image,
         'domain': article.domain,
-        'published': article.published
+        'published': article.published,
+        'score': score
     }
     return JsonResponse(data)
 
@@ -43,7 +44,7 @@ def get_article(request):
 @login_required(login_url='/login/')
 @csrf_exempt
 def view_article(request):
-    """Registered a viewed article as 'clicked' or 'skipped'
+    """Registeres a viewed article as 'clicked' or 'skipped'
     """
     article_url = request.POST.get('articleUrl', None)
     clicked = request.POST.get('clicked', None)
@@ -97,6 +98,5 @@ def read_article(request):
         return HttpResponseBadRequest()
     av.read = True
     av.save()
-    print(av.read)
     return HttpResponse('')
 
