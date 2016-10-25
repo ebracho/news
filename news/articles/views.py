@@ -50,7 +50,8 @@ def view_article(request):
     clicked = request.POST.get('clicked', None)
     if not article_url and clicked:
         return HttpResponseBadRequest('Missing Parameters')
-    clicked = bool(clicked)
+    clicked = clicked == 'true'
+    print(clicked)
     article = Article.objects.filter(url=article_url).first()
     if not article:
         return HttpResponseBadRequest('Article not found')

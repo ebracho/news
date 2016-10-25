@@ -153,8 +153,8 @@
       var queueNodes = this.props.data.map(function(article) {
         return (
           <li key={article.url}>
-            <a href={article.url}>{article.title}</a>
             <button onClick={this.buildPopFunction(article.url)}>X</button>
+            <a href={article.url}>{article.title}</a>
           </li>
         );
       }.bind(this));
