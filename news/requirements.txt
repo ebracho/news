@@ -1,22 +1,51 @@
-beautifulsoup4==4.5.1
-cssselect==0.9.2
-Django==1.10.2
-feedfinder2==0.0.4
-feedparser==5.2.1
-idna==2.1
-jieba3k==0.35.1
-lxml==3.6.4
-newspaper3k==0.1.7
-nltk==3.2.1
-numpy==1.11.2
-Pillow==3.4.1
-python-dateutil==2.5.3
-PyYAML==3.12
-redis==2.10.5
-requests==2.11.1
-requests-file==1.4
-scikit-learn==0.18
-scipy==0.18.1
-six==1.10.0
-sklearn==0.0
-tldextract==2.0.1
+[?1049h[?1h=[1;25r[?12;25h[?12l[?25h[27m[23m[m[H[2J[?25l[25;1H"articles/models.py" 70L, 1968C[1;1H[33m  1 [m[36m#[m
+[33m  2 [m[36m# Article models[m
+[33m  3 [m[36m#[m
+[33m  4 
+  5 [m[35mfrom[m django.db [35mimport[m models
+[33m  6 [m[35mfrom[m django.contrib.auth.models [35mimport[m User
+[33m  7 [m[35mfrom[m django.utils [35mimport[m timezone
+[33m  8 [m[35mfrom[m django.conf [35mimport[m settings
+[33m  9 
+ 10 [mredis_client = settings.REDIS_CLIENT
+[33m 11 
+ 12 [mDOMAINS = [
+[33m 13 [m    [38;5;130m'http://pcmag.com'[m,
+[33m 14 [m    [38;5;130m'https://www.yahoo.com/news'[m,
+[33m 15 [m]
+[33m 16 
+ 17 class[m [1m[36mArticle[m(models.Model):
+[33m 18 [m    [38;5;130m"""Stores information about a web article[m
+[33m 19 [m[38;5;130m    """[m
+[33m 20 [m    url = models.CharField(max_length=[38;5;130m256[m, primary_key=[1m[36mTrue[m)
+[33m 21 [m    title = models.TextField()
+[33m 22 [m    text = models.TextField()
+[33m 23 [m    image = models.CharField(max_length=[38;5;130m256[m)
+[33m 24 [m    domain = models.CharField(max_length=[38;5;130m256[m)[25;63H1,1[11CTop[1;5H[?12l[?25h[?25l[25;1H[38;5;130m-- INSERT --[m[25;13H[K[25;63H59,58[9C50%[27m[23m[m[H[2J[1;1H[33m 47 [m    [33mdef[m [1m[36mid[m(self):
+[33m 48 [8Creturn[m [38;5;130m'user:{.username}:articlequeue'[m.format(self.user)
+[33m 49 
+ 50 [m    [35m@[m[1m[36mproperty[m
+[33m 51 [m    [33mdef[m [1m[36msize[m(self):
+[33m 52 [8Creturn[m redis_client.zcard(self.id)
+[33m 53 
+ 54 [m    [33mdef[m [1m[36mpop[m(self):
+[33m 55 [m[8C[38;5;130m"""Removes and returns the article with the highest click score[m
+[33m 56 [m[38;5;130m        """[m
+[33m 57 [8Cif[m self.size == [38;5;130m0[m:
+[33m 58 [12Creturn[m [1m[36mNone[m
+[33m 59 [m[8Carticle_url = redis_client.zrange(self.id, -[38;5;130m1[m, -1t )[[38;5;130m0[m]
+[33m 60 [m[8Credis_client.zrem(self.id, article_url)
+[33m 61 [m[8Carticle = Article.objects.filter(url=article_url).first()
+[33m 62 [8Creturn[m article
+[33m 63 
+ 64 [m    [33mdef[m [1m[36mupdate[m(self, article_scores):
+[33m 65 [m[8C[38;5;130m"""Populates user's article queue with url-score pairs in [m
+[33m 66 [m[38;5;130m        `article_scores` dict[m
+[33m 67 [m[38;5;130m        """[m
+[33m 68 [m[8Credis_client.zadd(self.id, **article_scores)
+[33m 69 
+ 70 [m
+[38;5;130m-- INSERT --[m[50C59,60[9CBot[13;46H[46m([17C)[?12l[?25h[?25l[m)[46m[[m[38;5;130m0[m][13;67H[K[13;63H[46m)[m[[25;66H59[13;63H[?12l[?25h[?25l[38;5;130m1[m)[46m[[m[38;5;130m0[m][13;66H[K[13;62H[46m)[m[[25;67H8[13;62H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;65H[K[13;61H[46m)[m[[25;67H7[13;61H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;64H[K[13;60H[46m)[m[[25;67H6[13;60H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;63H[K[13;59H[46m)[m[[25;67H5[13;59H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;62H[K[13;58H[46m)[m[[25;67H4[13;58H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;61H[K[13;57H[46m)[m[[25;67H3[13;57H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;60H[K[13;56H[46m)[m[[25;67H2[13;56H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;59H[K[13;55H[46m)[m[[25;67H1[13;55H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;58H[K[13;54H[46m)[m[[25;67H0[13;54H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;57H[K[13;53H[46m)[m[[25;66H49[13;53H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;56H[K[13;52H[46m)[m[[25;67H8[13;52H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;55H[K[13;51H[46m)[m[[25;67H7[13;51H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;54H[K[13;50H[46m)[m[[25;67H6[13;50H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;53H[K[13;49H[46m)[m[[25;67H5[13;49H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;52H[K[13;48H[46m)[m[[25;67H4[13;48H[?12l[?25h[?25l)[46m[[m[38;5;130m0[m][13;51H[K[13;47H[46m)[m[[25;67H3[13;47H[?12l[?25h[?25l[46m)[[m[38;5;130m0[m][13;50H[K[13;46H)[[25;67H2[13;46H[?12l[?25h[?25l)[[38;5;130m0[m][13;49H[K[25;67H1[13;45H[?12l[?25h[?25l)[[38;5;130m0[m][13;48H[K[25;67H0[13;44H[?12l[?25h[?25l)[[38;5;130m0[m][13;47H[K[25;66H39[13;43H[?12l[?25h[?25l)[[38;5;130m0[m][13;46H[K[25;67H8[13;42H[?12l[?25h[?25l[25;1H[K[25;63H59,37[9CBot[13;41H[?12l[?25h[?25l[25;1HType  :quit<Enter>  to exit Vim[25;63H[K[25;63H59,37[9CBot[13;41H[?12l[?25h[?25l[25;63H[K[25;63H59,37[9CBot[13;41H[?12l[?25h[?25lr)[46m[[1C][m[25;67H9[13;43H[?12l[?25h[?25l[[1C][25;67H8[13;42H[?12l[?25h[?25l[25;1H[38;5;130m-- INSERT --[m[25;13H[K[25;63H59,39[9CBot[13;43H[46m[[1C][?12l[?25h[?25ld[m[[38;5;130m[46m0[m]d[46m[[m[38;5;130m0[m[46m][m[25;66H40[13;44H[?12l[?25h[?25l[46mf[m[[38;5;130m[46m0[m]f[46m[[m[38;5;130m0[m[46m][m[25;67H1[13;45H[?12l[?25h[?25l[46md[m[[38;5;130m[46m0[m]d[46m[[m[38;5;130m0[m[46m][m[25;67H2[13;46H[?12l[?25h[?25l[46ma[m[[38;5;130m[46m0[m]a[46m[[m[38;5;130m0[m[46m][m[25;67H3[13;47H[?12l[?25h[?25l[46ms[m[[38;5;130m[46m0[m]s[46m[[m[38;5;130m0[m[46m][m[25;67H4[13;48H[?12l[?25h[?25l[46mf[m[[38;5;130m[46m0[m]f[46m[[m[38;5;130m0[m[46m][m[25;67H5[13;49H[?12l[?25h[25;1H[?1l>[?1049lVim: Caught deadly signal HUP
+Vim: preserving files...
+Vim: Finished.
+[25;1H

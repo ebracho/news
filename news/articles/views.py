@@ -1,9 +1,10 @@
 import random
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from articles.models import Article
+from django.views.decorators.csrf import csrf_exempt
+from articles.models import Article, ArticleView
 
 #
 # Site views
@@ -19,7 +20,8 @@ def index(request):
 #
 
 @login_required(login_url='/login/')
-def article(request):
+@csrf_exempt
+def get_article(request):
     """Returns an unread article that best matches the user's history
     """
     aq = request.user.articlequeue
@@ -36,4 +38,65 @@ def article(request):
         'published': article.published
     }
     return JsonResponse(data)
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def view_article(request):
+    """Registered a viewed article as 'clicked' or 'skipped'
+    """
+    article_url = request.POST.get('articleUrl', None)
+    clicked = request.POST.get('clicked', None)
+    if not article_url and clicked:
+        return HttpResponseBadRequest('Missing Parameters')
+    clicked = bool(clicked)
+    article = Article.objects.filter(url=article_url).first()
+    if not article:
+        return HttpResponseBadRequest('Article not found')
+    av = ArticleView.objects.filter(article=article, user=request.user).first()
+    if av is None:
+        av = ArticleView(article=article, user=request.user, clicked=clicked)
+    else:
+        av.clicked = clicked
+    av.save()
+    return HttpResponse('')
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def get_reading_queue(request):
+    """Returns a list of articles that were clicked but are not yet read 
+    by the user
+    """
+    rq = (
+        ArticleView.objects
+        .filter(user=request.user)
+        .filter(clicked=True)
+        .filter(read=False)
+        .order_by('timestamp')
+        .all()
+    )
+    data = [{
+        'url': av.article.url,
+        'title': av.article.title,
+    } for av in rq]
+    return JsonResponse({ 'readingQueue': data })
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def read_article(request):
+    article_url = request.POST.get('articleUrl', None)
+    if not article_url:
+        return HttpResponseBadRequest()
+    article = Article.objects.filter(url=article_url).first()
+    if not article:
+        return HttpResponseBadRequest()
+    av = ArticleView.objects.filter(article=article, user=request.user).first()
+    if not av:
+        return HttpResponseBadRequest()
+    av.read = True
+    av.save()
+    print(av.read)
+    return HttpResponse('')
 
