@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from articles.models import Article, ArticleView
+from articles.tasks import build_article_queue
 
 #
 # Site views
@@ -26,9 +27,10 @@ def get_article(request):
     """
     aq = request.user.articlequeue
     if aq.size > 0:
-        article, score = aq.pop()
+        article, score = aq.pop_random(0.4)
     else:
         article = random.choice(Article.objects.all())
+        score = 0.666
     data = {
         'articleUrl': article.url,
         'title': article.title,
@@ -51,7 +53,6 @@ def view_article(request):
     if not article_url and clicked:
         return HttpResponseBadRequest('Missing Parameters')
     clicked = clicked == 'true'
-    print(clicked)
     article = Article.objects.filter(url=article_url).first()
     if not article:
         return HttpResponseBadRequest('Article not found')
@@ -61,6 +62,8 @@ def view_article(request):
     else:
         av.clicked = clicked
     av.save()
+    # Rebuild user's article queue
+    build_article_queue.delay(request.user)
     return HttpResponse('')
 
 

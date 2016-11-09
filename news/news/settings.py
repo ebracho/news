@@ -161,3 +161,20 @@ REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB = os.environ.get('REDIS_DB', 0)
 REDIS_CLIENT = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
+
+# Celery configuration
+
+from datetime import timedelta
+
+REDIS_URL = 'redis://{0}:{1}'.format(REDIS_HOST, REDIS_PORT)
+BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_TIMEZONE = 'UTC'
+
+CELERYBEAT_SCHEDULE = {
+    'scrape-articles-hourly': {
+        'task': 'articles.tasks.scrape_articles',
+        'schedule': timedelta(hours=1)
+    }
+}
+

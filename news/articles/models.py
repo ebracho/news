@@ -2,6 +2,8 @@
 # Article models
 #
 
+import math
+import random
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -37,6 +39,13 @@ class ArticleView(models.Model):
     class Meta:
         unique_together = ('article', 'user')
 
+    @staticmethod
+    def get_clicked_articles(user):
+        return ArticleView.objects.filter(user=user).filter(clicked=True).all()
+
+    @staticmethod
+    def get_skipped_articles(user):
+        return ArticleView.objects.filter(user=user).filter(clicked=False).all()
 
 class ArticleQueue(models.Model):
     """User model for MyNews.
@@ -56,8 +65,23 @@ class ArticleQueue(models.Model):
         the article, score
         """
         if self.size == 0:
-            return None
+            raise ValueError('Empty article queue cannot be popped from')
         article_url, score = redis_client.zrange(self.id, -1, -1, withscores=True)[0]
+        redis_client.zrem(self.id, article_url)
+        article = Article.objects.filter(url=article_url).first()
+        return article, score
+
+    def pop_random(self, subsection):
+        """Pops a random article from the first `subsection` percent of the
+        article queue, where 0 > `subsection` >= 1
+        """
+        if self.size == 0:
+            raise IndexError('Empty article queue cannot be popped from')
+        if not (0 < subsection <= 1):
+            raise ValueError('subsection must be greater and less than or equal to 1')
+        end_index = math.ceil(self.size * subsection)
+        articles = redis_client.zrevrange(self.id, 0, end_index, withscores=True)
+        article_url, score = random.choice(articles)
         redis_client.zrem(self.id, article_url)
         article = Article.objects.filter(url=article_url).first()
         return article, score

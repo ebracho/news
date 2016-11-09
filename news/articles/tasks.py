@@ -7,6 +7,7 @@ import logging
 import newspaper
 from newspaper import news_pool
 from tldextract import extract
+from celery import shared_task
 from .models import Article, ArticleView, DOMAINS
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def parse_source(url):
     return '{0.domain}.{0.suffix}'.format(extract(url))
 
 
+@shared_task
 def scrape_articles(domains=DOMAINS):
     """Crawls domains and scrapes new web articles.
     """
@@ -82,10 +84,16 @@ def build_classifier(user):
     return nb_pipeline.fit(data, labels)
 
 
+@shared_task
 def build_article_queue(user):
     """Repopulate user's article queue with unread articles ordered by 
-    click probability.
+    click probability. Does nothing if user has less than 5 clicked and
+    5 skipped articles.
     """
+    clicked = ArticleView.get_clicked_articles(user)
+    skipped = ArticleView.get_skipped_articles(user)
+    if len(clicked) < 5 or len(skipped) < 5:
+        return
     clf = build_classifier(user)
     unread_articles = get_unread_articles(user)
     probs = clf.predict_proba(a.text for a in unread_articles)
