@@ -63,6 +63,7 @@ def view_article(request):
     else:
         av.clicked = clicked
     av.save()
+    print(ArticleView.objects.filter(user=request.user).all())
     # Rebuild user's article queue
     build_article_queue.delay(request.user)
     return HttpResponse('')

@@ -42,26 +42,67 @@
 </head>
 
 <body>
-  <center>
-    <div id="newsBoxWrapper"></div>
-    <div class="row column">
-      <button class="button expand" id="submitArticlesButton">Submit Selection(s)</button>
-    </div>
-  </center>
+  <div id="newsBoxWrapper"></div>
 </body>
 
 <!-- react components -->
 <script type="text/babel">
 
 var NewsBox = React.createClass({
+	loadReadingQueue: function() {
+		$.ajax({
+			url: '/get_reading_queue/',
+			datatype: 'json',
+			cache: false,
+			success: function(data) {
+				this.setState({readingQueueData: data.readingQueue});
+			}.bind(this),
+			error: function(xhr, status, err) {
+				console.error(this.props.url, status, err.toString());
+			}.bind(this)
+		});
+	},
+	popReadingQueue: function(articleUrl) {
+		$.post({
+			url: '/read_article/',
+			datatype: 'json',
+			cache: false,
+			data: {
+				'articleUrl': articleUrl
+			},
+			success: function(data) {
+			}.bind(this),
+			error: function(xhr, status, err) {
+				console.error(this.props.url, status, err.toString());
+			}.bind(this)
+		});
+		this.loadReadingQueue()
+	},
+  getInitialState: function() {
+    return {
+      readingQueueData: [],
+    };
+  },
+  componentDidMount: function() {
+    this.loadReadingQueue();
+  },
   render: function() {
     let articleElements = this.props.config.elements.map(function(element, index) {
       return <Article key={index.toString()}
-        className={this.props.config.className}
-        buttonId={this.props.config.buttonId}
+        className={this.props.config.articleClassName}
         randomness={element.randomness} />
     }.bind(this));
-    return <div className="row">{articleElements}</div>;
+    return (
+      <div>
+        <div className="row">{articleElements}</div>
+        <center className="row">
+          <button className="column button expand" id="submitArticlesButton">Add Selections To Queue</button>
+        </center>
+        <ReadingQueue className="row column" 
+          data={this.state.readingQueueData} 
+          popReadingQueue={this.popReadingQueue} />
+      </div>
+    );
   },
 });
 
@@ -87,7 +128,10 @@ var Article = React.createClass({
     });
   },
   viewArticle: function() {
-    console.log('viewArticle called ' + this.state.article.title);
+    console.log({
+      clicked: this.state.selected,
+      articleUrl: this.state.article.articleUrl
+    });
     $.post({
       url: '/view_article/',
       datatype: 'json',
@@ -109,11 +153,11 @@ var Article = React.createClass({
   },
   componentDidMount: function() {
     this.loadNextArticle();
-    console.log(document.getElementById(this.props.buttonId));
-    document.getElementById(this.props.buttonId).addEventListener('click', this.viewArticle);
+    console.log(document.getElementById('submitArticlesButton'));
+    document.getElementById('submitArticlesButton').addEventListener('click', this.viewArticle);
   },
   render: function() {
-    let className = this.props.className;
+    let className = 'small-12 medium-6 large-3 columns articleSuggestion';
     if (this.state.selected) {
       className += ' selected';
     }
@@ -127,14 +171,37 @@ var Article = React.createClass({
   },
 });
 
-/*
 var ReadingQueue = React.createClass({
+  buildPopFunction: function(articleUrl) {
+    return function() {
+      this.props.popReadingQueue(articleUrl);
+    }.bind(this);
+  },
+  render: function() {
+    console.log(this.props.data);
+    var queueNodes = this.props.data.map(function(article) {
+      return (
+        <tr key={article.url}>
+          <td><button className="button alert" onClick={this.buildPopFunction(article.url)}>X</button></td>
+          <td><a href={article.url}>{article.title}</a></td>
+        </tr>
+      );
+    }.bind(this));
+    return (
+      <div className="readingQueue">
+        <h3>Reading Queue</h3>
+        <table>
+          <tbody>
+            {queueNodes}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 });
-*/
 
 let config = {
-  buttonId: 'submitArticlesButton',
-  className: 'small-12 medium-6 large-3 columns articleSuggestion',
+  articleClassName: 'small-12 medium-6 large-3 columns articleSuggestion',
   elements: [
     {
       randomness: 0.0,
