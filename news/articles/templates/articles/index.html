@@ -2,23 +2,39 @@
 
 <head>
 
-  <title>MyNews</title>
+  <title>MyNews|Index</title>
+  <meta charset="utf-8" />
 
-  <!-- react includes -->
+  <!-- Jquery -->
+  <script src="http://code.jquery.com/jquery-2.2.4.js"
+    integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+    crossorigin="anonymous"></script>
+
+  <!-- React -->
   <script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
   <script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
   <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
-  <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
-  <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+
+  <!-- Foundation -->
+  <link rel=stylesheet href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation.js"></script>
 
   <!-- styles -->
   <style>
 
     .articleSuggestion {
       border: 1px solid black;
-      margin: 2px;
       padding: 5px;
-      width: 300px;
+    }
+
+    .selected { 
+      border: 2px solid green;
+    }
+
+    #submitArticlesButton {
+      display: block;
+      width: 100%;
+      margin: 2px;
     }
 
   </style>
@@ -26,157 +42,119 @@
 </head>
 
 <body>
-  <div id="news-box-wrapper"></div>
+  <center>
+    <div id="newsBoxWrapper"></div>
+    <div class="row column">
+      <button class="button expand" id="submitArticlesButton">Submit Selection(s)</button>
+    </div>
+  </center>
 </body>
-
 
 <!-- react components -->
 <script type="text/babel">
 
-  /*
-    - NewsBox
-      - ArticleSuggestion
-      - ReadingQueue
-  */
+var NewsBox = React.createClass({
+  render: function() {
+    let articleElements = this.props.config.elements.map(function(element, index) {
+      return <Article key={index.toString()}
+        className={this.props.config.className}
+        buttonId={this.props.config.buttonId}
+        randomness={element.randomness} />
+    }.bind(this));
+    return <div className="row">{articleElements}</div>;
+  },
+});
 
-  var NewsBox = React.createClass({
-    getInitialState: function() {
-      return {article: null, readingQueueData: []};
-    },
-    loadNextArticle: function() {
-      $.ajax({
-        url: this.props.getArticleEndpoint,
-        datatype: 'json',
-        cache: false,
-        success: function(data) {
-          this.setState({article: data});
-        }.bind(this),
-        error: function(xhr, status, err) {
-          console.error(this.props.url, status, err.toString());
-        }.bind(this)
-      });
-    },
-    viewArticle: function(clicked) {
-      $.post({
-        url: this.props.viewArticleEndpoint,
-        datatype: 'json',
-        cache: false,
-        data: {
-          clicked: clicked,
-          articleUrl: this.state.article.articleUrl
-        },
-        success: function() {
-          this.loadReadingQueue();
-        }.bind(this),
-        error: function(xhr, status, err) {
-          console.error(this.props.url, status, err.toString());
-        }.bind(this)
-      });
-      this.loadNextArticle();
-    },
-    loadReadingQueue: function() {
-      $.ajax({
-        url: this.props.getReadingQueueEndpoint,
-        datatype: 'json',
-        cache: false,
-        success: function(data) {
-          this.setState({readingQueueData: data.readingQueue});
-        }.bind(this),
-        error: function(xhr, status, err) {
-          console.error(this.props.url, status, err.toString());
-        }.bind(this)
-      });
-    },
-    popReadingQueue: function(articleUrl) {
-      $.post({
-        url: this.props.popReadingQueueEndpoint,
-        datatype: 'json',
-        cache: false,
-        data: {
-          'articleUrl': articleUrl
-        },
-        success: function(data) {
-        }.bind(this),
-        error: function(xhr, status, err) {
-          console.error(this.props.url, status, err.toString());
-        }.bind(this)
-      });
-      this.loadReadingQueue()
-    },
-    componentDidMount: function() {
-      this.loadNextArticle();
-      this.loadReadingQueue()
-      setInterval(this.loadReadingQueue, this.props.pollInterval);
-    },
-    render: function() {
-      return (
-        <div className="newsBox">
-          <h1>My News</h1>
-          <ArticleSuggestion article={this.state.article} 
-            viewArticle={this.viewArticle} />
-          <ReadingQueue data={this.state.readingQueueData}
-            popReadingQueue={this.popReadingQueue} />
-        </div>
-      );
+var Article = React.createClass({
+  getInitialState: function() {
+    return {
+      article: null,
+      selected: false,
+    };
+  },
+  loadNextArticle: function() {
+    $.ajax({
+      url: '/get_article',
+      datatype: 'json',
+      cache: false,
+      data: {randomness: this.props.randomness},
+      success: function(data) {
+        this.setState({article: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error('/get_article', status, err.toString());
+      }.bind(this),
+    });
+  },
+  viewArticle: function() {
+    console.log('viewArticle called ' + this.state.article.title);
+    $.post({
+      url: '/view_article/',
+      datatype: 'json',
+      cache: false,
+      data: {
+        clicked: this.state.selected,
+        articleUrl: this.state.article.articleUrl,
+      },
+      error: function(xhr, status, err) {
+        console.error('/get_article', status, err.toString());
+      }.bind(this),
+    });
+    this.setState({selected: false});
+    this.loadNextArticle();
+  },
+  toggleSelect: function() {
+    console.log('toggleSelect called');
+    this.setState({selected: !this.state.selected});
+  },
+  componentDidMount: function() {
+    this.loadNextArticle();
+    console.log(document.getElementById(this.props.buttonId));
+    document.getElementById(this.props.buttonId).addEventListener('click', this.viewArticle);
+  },
+  render: function() {
+    let className = this.props.className;
+    if (this.state.selected) {
+      className += ' selected';
     }
-  });
+    return this.state.article ? (
+      <div className={className} onClick={this.toggleSelect}>
+        <h5>{this.state.article.title}</h5>
+        <img src={this.state.article.imageUrl} />
+        <p>{this.state.article.text}... <strong>({this.state.article.score.toFixed(3)})</strong></p>
+      </div>
+    ) : <p>loading article</p>;
+  },
+});
 
+/*
+var ReadingQueue = React.createClass({
+});
+*/
 
-  var ArticleSuggestion = React.createClass({
-    clickArticle: function() {
-      this.props.viewArticle(true);
+let config = {
+  buttonId: 'submitArticlesButton',
+  className: 'small-12 medium-6 large-3 columns articleSuggestion',
+  elements: [
+    {
+      randomness: 0.0,
     },
-    skipArticle: function() {
-      this.props.viewArticle(false);
+    {
+      randomness: 0.2,
     },
-    render: function() {
-      return this.props.article ? (
-        <div className="articleSuggestion">
-          <button onClick={this.clickArticle}>Add to queue</button>
-          <button onClick={this.skipArticle}>Skip</button>
-          <p>prb: {this.props.article.score.toFixed(3)}</p>
-          <h3><a href={this.props.article.url}>{this.props.article.title}</a></h3>
-          <img width="300" src={this.props.article.imageUrl}></img>
-          <p>{this.props.article.text}...</p>
-        </div>
-      ) : <p>loading article</p>;
-    }
-  });
-
-  var ReadingQueue = React.createClass({
-    buildPopFunction: function(articleUrl) {
-      return function() {
-        this.props.popReadingQueue(articleUrl);
-      }.bind(this);
+    {
+      randomness: 0.5,
     },
-    render: function() {
-      var queueNodes = this.props.data.map(function(article) {
-        return (
-          <li key={article.url}>
-            <button onClick={this.buildPopFunction(article.url)}>X</button>
-            <a href={article.url}>{article.title}</a>
-          </li>
-        );
-      }.bind(this));
-      return (
-        <div className="readingQueue">
-          <h3>Reading Queue</h3>
-          <ul>
-            {queueNodes}
-          </ul>
-        </div>
-      );
-    }
-  });
+    {
+      randomness: 0.8,
+    },
+  ],
+};
 
-  ReactDOM.render(
-    <NewsBox getArticleEndpoint="/get_article/" 
-      viewArticleEndpoint="/view_article/"
-      getReadingQueueEndpoint="/get_reading_queue/"
-      popReadingQueueEndpoint="/read_article/"
-      pollInterval="2000" />,
-    document.getElementById("news-box-wrapper")
-  );
+ReactDOM.render(
+  <NewsBox config={config} />,
+  document.getElementById('newsBoxWrapper')
+);
 
 </script>
 

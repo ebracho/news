@@ -25,16 +25,17 @@ def index(request):
 def get_article(request):
     """Returns an unread article that best matches the user's history
     """
+    randomness = float(request.GET.get('randomness', 0.0))
     aq = request.user.articlequeue
     if aq.size > 0:
-        article, score = aq.pop_random(0.4)
+        article, score = aq.pop_random(randomness)
     else:
         article = random.choice(Article.objects.all())
-        score = 0.666
+        score = 0.0
     data = {
         'articleUrl': article.url,
         'title': article.title,
-        'text': article.text[:500],
+        'text': article.text[:256],
         'imageUrl': article.image,
         'domain': article.domain,
         'published': article.published,

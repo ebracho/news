@@ -77,7 +77,7 @@ class ArticleQueue(models.Model):
         """
         if self.size == 0:
             raise IndexError('Empty article queue cannot be popped from')
-        if not (0 < subsection <= 1):
+        if not (0 <= subsection <= 1):
             raise ValueError('subsection must be greater and less than or equal to 1')
         end_index = math.ceil(self.size * subsection)
         articles = redis_client.zrevrange(self.id, 0, end_index, withscores=True)
