@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from articles.models import Article, ArticleView
 from articles.tasks import build_article_queue
+from .util import get_unread_articles
 
 #
 # Site views
@@ -30,7 +31,7 @@ def get_article(request):
     if aq.size > 0:
         article, score = aq.pop_random(randomness)
     else:
-        article = random.choice(Article.objects.all())
+        article = random.choice(get_unread_articles(request.user))
         score = 0.0
     data = {
         'articleUrl': article.url,
