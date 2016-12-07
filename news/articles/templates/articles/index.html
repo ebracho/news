@@ -96,7 +96,9 @@ var NewsBox = React.createClass({
       <div>
         <div className="row">{articleElements}</div>
         <center className="row">
-          <button className="column button expand" id="submitArticlesButton">Add Selections To Queue</button>
+          <button className="column button expand" 
+            onClick={this.loadReadingQueue.bind(this)} 
+            id="submitArticlesButton">Add Selections To Queue</button>
         </center>
         <ReadingQueue className="row column" 
           data={this.state.readingQueueData} 

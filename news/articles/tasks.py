@@ -96,6 +96,7 @@ def build_article_queue(user):
         return
     clf = build_classifier(user)
     unread_articles = get_unread_articles(user)
+    print(len(unread_articles))
     probs = clf.predict_proba(a.text for a in unread_articles)
     scores = { a.url: p[0] for a, p in zip(unread_articles, probs) }
     user.articlequeue.update(scores)

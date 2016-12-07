@@ -13,7 +13,8 @@ redis_client = settings.REDIS_CLIENT
 
 DOMAINS = [
     'http://pcmag.com',
-    'https://www.yahoo.com/news',
+    'http://vox.com',
+    'http://theweek.com',
 ]
 
 class Article(models.Model):
@@ -87,9 +88,10 @@ class ArticleQueue(models.Model):
         return article, score
 
     def update(self, article_scores):
-        """Populates user's article queue with url-score pairs in 
+        """Repopulates user's article queue with url-score pairs in 
         `article_scores` dict
         """
+        redis_client.delete(self.id)
         redis_client.zadd(self.id, **article_scores)
         
 

@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from articles.models import Article, ArticleView
 from articles.tasks import build_article_queue
+from articles.util import get_unread_articles
 
 #
 # Site views
@@ -63,7 +64,6 @@ def view_article(request):
     else:
         av.clicked = clicked
     av.save()
-    print(ArticleView.objects.filter(user=request.user).all())
     # Rebuild user's article queue
     build_article_queue.delay(request.user)
     return HttpResponse('')
