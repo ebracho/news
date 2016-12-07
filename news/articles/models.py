@@ -49,7 +49,7 @@ class ArticleView(models.Model):
         return ArticleView.objects.filter(user=user).filter(clicked=False).all()
 
 class ArticleQueue(models.Model):
-    """User model for MyNews.
+    """Article suggestion queue for user
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
 
@@ -94,4 +94,3 @@ class ArticleQueue(models.Model):
         redis_client.delete(self.id)
         redis_client.zadd(self.id, **article_scores)
         
-
